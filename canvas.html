@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>仪表盘</title>
+	<style type="text/css">
+		html,
+  body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  }
+  
+  canvas {
+  border: 1px solid #eee;
+  position: relative;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  /*background: -webkit-linear-gradient(top, #0e83f5 0%, #21bdf6 100%);
+  background: -ms-linear-gradient(top, #0e83f5 0%, #21bdf6 100%);
+  background: -moz-linear-gradient(top, #0e83f5 0%, #21bdf6 100%);
+  background: linear-gradient(top, #0e83f5 0%, #21bdf6 100%);
+  }*/
+	</style>
+</head>
+<body>
+   <canvas id="canvas" width="400" height="700"></canvas>
+</body>
+</html>
+<script type="text/javascript">
+   var canvas = document.getElementById('canvas'),
+   ctx = canvas.getContext('2d'),
+   cWidth = canvas.width,
+   cHeight = canvas.height,
+   score = 620,
+   stage = ['E', 'D', 'C', 'B', 'A',"AA","AAA"],
+   radius = 120,
+   outRadius = 160,
+   deg0 = Math.PI / 9,
+   deg1 = Math.PI * 11 / 45;
+ 
+  if(score > 900) {
+   // alert('信用分数区间：400~900');
+   
+  } else {
+   var dot = new Dot(),
+   dotSpeed = 0.03,
+   textSpeed = Math.round(dotSpeed * 100 / deg1),
+   angle = 0;//动点初始位置
+   if(score<500){
+    var credit = score;
+   }else{
+    var	credit = 500;
+   }
+   
+ 
+   (function drawFrame() {
+ 
+   ctx.save();
+   ctx.clearRect(0, 0, cWidth, cHeight);
+   ctx.translate(cWidth / 2, cHeight / 2);
+   ctx.rotate(8 * deg0);
+ 
+   dot.x = radius * Math.cos(angle);
+   dot.y = radius * Math.sin(angle);
+ 
+   var aim = (score - 500) * deg1 / 50;//动点到达位置 50代表每一大刻度盘的分数值 每一大刻度盘分数值
+   if(score>750){
+   	  aim = (750-500) * deg1 / 50;
+   }
+   if(angle < aim) {
+    angle += (dotSpeed);
+   }
+
+   dot.draw(ctx);//动点
+ 
+   if(credit < score - textSpeed) {
+    credit += textSpeed;
+   } else if(credit >= score - textSpeed && credit < score) {
+    credit += 1;
+   }
+   text(credit);
+ 
+   ctx.save();//动点环
+   ctx.beginPath();
+   ctx.lineWidth = 3;
+   // 渐变色
+   var linearGradient1 = ctx.createLinearGradient(0, 0, radius,angle);
+	linearGradient1.addColorStop(1, '#F1533E');//起始色
+    linearGradient1.addColorStop(0.7, '#EE802E');
+	linearGradient1.addColorStop(0, '#D9C753');
+	// ctx.fiStyle = linearGradient1;
+	// ctx.fillRect(10,10,130, 100);
+		
+
+   ctx.strokeStyle = linearGradient1;
+   ctx.arc(0, 0, radius, 0, angle, false);
+   ctx.stroke();
+   ctx.restore();
+
+   
+ 
+   window.requestAnimationFrame(drawFrame);
+ 
+   ctx.save(); //中间刻度层  外环
+   ctx.beginPath();
+   ctx.strokeStyle = '#EEF5F9';
+   ctx.lineWidth = 15;
+   ctx.arc(0, 0, outRadius, 0, 11 * deg0, false);
+   ctx.stroke();
+   ctx.restore();
+ 
+   ctx.save(); // 刻度线
+   for(var i = 0; i < 6; i++) {
+    ctx.beginPath();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#fff';
+    ctx.moveTo(outRadius+5, 0);
+    ctx.lineTo(outRadius-5, 0);
+    ctx.stroke();
+    ctx.rotate(deg1);//刻度偏移角度
+   }
+   ctx.restore();
+   
+   //动态外环
+   ctx.save();//动点环
+   ctx.beginPath();
+   ctx.lineWidth = 15;
+   // 渐变色
+   var linearGradient1 = ctx.createLinearGradient(0, 0, outRadius,angle);
+	linearGradient1.addColorStop(1, '#F1533E');//起始色
+    linearGradient1.addColorStop(0.7, '#EA6937');
+    linearGradient1.addColorStop(0.3, '#F3A94B');
+	linearGradient1.addColorStop(0, '#D9C753');
+   ctx.strokeStyle = linearGradient1;
+   ctx.arc(0, 0, outRadius, 0, angle, false);
+   ctx.stroke();
+   ctx.restore();
+
+
+
+   ctx.save(); // 细分刻度线
+   for(i = 0; i < 25; i++) {
+    if(i % 5 !== 0) {
+    ctx.beginPath();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(255, 255, 255, .1)';
+    ctx.moveTo(outRadius+5, 0);
+    ctx.lineTo(outRadius-5, 0);
+    ctx.stroke();
+    }
+    ctx.rotate(deg1 / 5);
+   }
+   ctx.restore();
+ 
+   ctx.save(); //信用分数
+   ctx.rotate(Math.PI / 2);
+   for(i = 0; i < 6; i++) {
+    ctx.fillStyle = '#D5D5D5';
+    ctx.font = '20px Microsoft yahei';
+    ctx.textAlign = 'center';
+    ctx.fillText(500 + 50 * i, 0, -(outRadius-35));//内层刻度文字
+    ctx.rotate(deg1);
+   }
+   ctx.restore();
+ 
+   ctx.save(); //分数段
+   ctx.rotate(Math.PI / 2 + deg0);
+   for(i = 0; i < 5; i++) {
+    ctx.fillStyle = '#333333';
+    ctx.font = '16px Microsoft yahei';
+    ctx.textAlign = 'center';
+    ctx.fillText(stage[i+1], 5, -(outRadius-35));//刻度盘的信用等级
+    ctx.rotate(deg1);
+   }
+   ctx.restore();
+ 
+   ctx.save(); //信用阶段及评估时间文字
+   ctx.rotate(10 * deg0);
+   ctx.fillStyle = 'green';
+   ctx.font = '38px Microsoft yahei';
+   ctx.textAlign = 'center';
+   let place = -70;
+   if(score < 500) {
+    ctx.fillText('E', 0, place);
+   } else if(score < 550 && score >= 500){
+     ctx.fillText('D', 0, place);
+   }else if(score < 600 && score >= 550) {
+    ctx.fillText('C', 0, place);
+   } else if(score < 650 && score >= 600) {
+    ctx.fillText('B', 0, place);
+   } else if(score < 700 && score >= 650) {
+    ctx.fillText('A', 0, place);
+   } else if(score <= 750 && score >= 700) {
+    ctx.fillText('AA', 0, place);
+   }else{
+   	ctx.fillText('AAA', 0, place);
+   }
+ 
+   ctx.fillStyle = '#80cbfa';
+   ctx.font = '14px Microsoft yahei';
+   ctx.fillText('评估时间：2016.11.06', 0, 60);
+ 
+   ctx.fillStyle = '#7ec5f9';
+   ctx.font = '14px Microsoft yahei';
+   ctx.fillText('', 0, -60);
+   ctx.restore();
+ 
+   // ctx.save(); //最外层轨道
+   ctx.beginPath();
+   ctx.strokeStyle = 'rgba(255, 255, 255, .4)';
+   ctx.lineWidth = 3;
+   ctx.arc(0, 0, radius, 0, 11 * deg0, false);
+   ctx.stroke();
+   ctx.restore();
+ 
+   })();
+  }
+ 
+  function Dot() {
+   this.x = 0;
+   this.y = 0;
+   this.draw = function(ctx) {
+   ctx.save();
+   ctx.beginPath();
+   ctx.fillStyle = 'rgba(255, 255, 255, .7)';
+   ctx.arc(this.x, this.y, 3, 0, Math.PI * 2, false);
+   ctx.fill();
+   ctx.restore();
+   };
+  }
+ 
+  function text(process) {
+   ctx.save();
+   ctx.rotate(10 * deg0);
+   ctx.fillStyle = '#000';
+   ctx.font = '80px Microsoft yahei';
+   ctx.textAlign = 'center';
+   ctx.textBaseLine = 'top';
+   ctx.fillText(process, 0, 10);
+   ctx.restore();
+   }
+  
+ </script>
+
+
+	
+
